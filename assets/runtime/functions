@@ -995,6 +995,16 @@ nginx_configure_gitlab_hsts() {
    fi
  }
 
+nginx_configure_gitlab_behind_revproxy() {
+  if [[ ${NGINX_BEHIND_REVPROXY} == true ]]; then
+    echo "Configuring nginx::gitlab_behind_revproxy..."
+    sed -i \
+      -e "/X-Real-IP/d" \
+      -e "/X-Forwarded-For/d" \
+      ${GITLAB_NGINX_CONFIG}
+  fi
+}
+
 nginx_configure_gitlab() {
   echo "Configuring nginx::gitlab..."
   update_template ${GITLAB_NGINX_CONFIG} \
@@ -1009,6 +1019,7 @@ nginx_configure_gitlab() {
   nginx_configure_gitlab_ssl
   nginx_configure_gitlab_hsts
   nginx_configure_gitlab_ipv6
+  nginx_configure_gitlab_behind_revproxy
 }
 
 nginx_configure_gitlab_ci() {
