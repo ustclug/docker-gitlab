@@ -1,15 +1,50 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
-VERSION=$(cat VERSION)
-DOCKER_REGISTRY_HOST=${DOCKER_REGISTRY_HOST:-hub.docker.com}
-DOCKER_IMAGE=${DOCKER_IMAGE:-sameersbn/gitlab}
+[[ $DEBUG = 'true' ]] && set -x
 
-docker build -t $DOCKER_IMAGE .
+is_running() {
+    [[ -z $(docker inspect --format='{{.State.Running}}' "$1" 2> /dev/null) ]]
+}
 
-docker tag $DOCKER_IMAGE $DOCKER_REGISTRY_HOST/$DOCKER_IMAGE:latest
-docker tag $DOCKER_IMAGE $DOCKER_REGISTRY_HOST/$DOCKER_IMAGE:$VERSION
+DOCKER_IMAGE=${DOCKER_IMAGE:-ustclug/gitlab}
 
-docker push $DOCKER_REGISTRY_HOST/$DOCKER_IMAGE:latest
-docker push $DOCKER_REGISTRY_HOST/$DOCKER_IMAGE:$VERSION
+is_running gitlab-mysql && \
+docker run --name gitlab-mysql -id \
+    --env 'DB_NAME=gitlabhq_production' \
+    --env 'DB_USER=gitlab' --env 'DB_PASS=password' \
+    sameersbn/mysql:latest
+
+is_running gitlab-redis && \
+docker run --name gitlab-redis -id sameersbn/redis:latest
+
+docker run --name gitlab -id \
+    --link gitlab-mysql:mysql --link gitlab-redis:redisio \
+    -p 10022:22 -p 10443:443 -p 10080:80 \
+    -e "DEBUG=$DEBUG" \
+    -e 'LANG=en_US.UTF-8' \
+    -e 'GITLAB_TIMEZONE=Asia/Shanghai' \
+    -e 'DB_USER=gitlab' \
+    -e 'DB_PASS=password' \
+    -e 'DB_TYPE=mysql' \
+    -e 'GITLAB_SECRETS_DB_KEY_BASE=ALongKey' \
+    -e 'GITLAB_SECRETS_SECRET_KEY_BASE=ALongKey' \
+    -e 'GITLAB_SECRETS_OTP_KEY_BASE=ALongKey' \
+    -e 'GITLAB_HOST=example.com' \
+    -e 'NGINX_WORKERS=auto' \
+    -e 'NGINX_BEHIND_REVPROXY=true' \
+    "$DOCKER_IMAGE:latest"
+
+timeout 2m docker logs -f gitlab | grep -m 1 -q 'nginx entered RUNNING state'
+
+trial=6
+while [[ $((--trial)) -ne 0 ]]; do
+    msg=$(curl -m10 -s 127.0.0.1:10080 |head -n1)
+    [[ $msg =~ '/users/sign_in' ]] && break
+    sleep 10
+done
+
+[[ $trial -eq 0 ]] && exit 1
+
+exit 0

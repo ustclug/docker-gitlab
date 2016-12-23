@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+DOCKER_IMAGE=${DOCKER_IMAGE:-ustclug/gitlab}
+
+# Only be executed on push builds
+if [[ $TRAVIS_BRANCH = 'master' ]]; then
+    VERSION="$(cat VERSION)"
+else
+    VERSION='latest'
+fi
+
+docker tag "$DOCKER_IMAGE" "$DOCKER_IMAGE:$VERSION"
+docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+docker push "$DOCKER_IMAGE:$VERSION"

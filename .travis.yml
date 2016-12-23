@@ -1,9 +1,19 @@
 sudo: required
-
 language: bash
-
+env:
+  global:
+  # $DOCKER_USER
+  - secure: xUku5dlstEy00DZDXQ11g0qIYtzJ0OGqciRUrUjAn7Hn0qYmBHBKoU7tI8/M1sxskzRmK5YOmquqvtw7ZY2Eiow8A29NB9bt48+ZlXlFr5YDkm6XpmX0KEdi3WOcKcmWMyEekAKs3GMe3XnXxppIFpMQNcruhUxC8RwXqdumVBsxHS/+ppflFVIJA+li0HX7oqUadQyb1VOk3WgCBgGVqNDbIl/WwxruxPcUhUdRxlx8srP1jst8z1zLpNbyCDr+ydOzfMbL5AEocRvm4Xe6EbavPn8t9X8MBhrF2zkZCvPuYgh6wRgHyt9PV2zKIilH128GBVjgf/dDWat01B9adB+TptgkAwSdVKfC3UFUV+bxMxIXYPR4ve/vffgeXJMgOo4buX/ZbBT/VDFFP9szRSQxDb8xIYf+yqEXVQJ8J5UiLR/G0gWfuPXj1Ki3+cUzjyiHbCOjqt3P8QWtlY2XPGP6DX2nfGV8P0ZZ50m8tU8DbnZQO7Ch15I/PpRDVblrfCHMYWiaoIjLFMpoUNCJ72/4L//wynql6j/iyA6jMeD/h3TUi6qei+g6WcxHpe+1rDdYxo3MIMn/IjUVC1JWAwqHeL6IOlxDuJcNrOPq3wqfGxB8iG8YRv3RyuuuGhhylAu7iiFBxGYJ99edKxFmwPLGp57IRq7k8FLvUHG/SaU=
+  # $DOCKER_PASS
+  - secure: noJa/Qg2HCRGWCcQG3igrIacUPHWFL7S4zjXyWBMdq1hHFeq9LGdkOOzPaSvt45C8gjdITLM77JC+LMthOe6e4r1LTvCL2EMEyKXOuGLgXRsrTO6MJGEQ/xoC7FPwjy/nPMOTup/YhynqvSNpJyfgDB1B9dCK7R0XfreMY5nITGFiuI/105yaEnQ4xZhJ7vY86pSijZtFet27JUk2LrNp2vj8C6TmLk+y1aVLSUX9CiyqZA151AmPS0hR1nfHUsINRA6axSgscZICt9McjV/yOV1kWwMuKpjGPEJA5Xmy1jDiMykL0YLwzkseOON64o8YVGF8+NqFZqN7HlJUaH7KGH8IobBA5MZ69ew/pIu8sNm3HeDtoaaD8y8fnki6lBVGT3WQc3pkHTTbfXZ3z/6S30XcNAD1jrJsTBky3NgEtw1cJAf7T8ARorI9P7uWNkbLANH81mOfOFFZg8Qh8d4Q2U632XBWsuBH9fCx17VcWowpjWa2nYzh4gdbk5FglI3h0OHxTh3MJBhEfJuwCd+DdlPc34BBVdF+ECCNBhJj8KHZuXj7qdaIxgza+mn/6jaKYQsiIW1SpmSJZaaa0MzRMpSMZTo8QjCnFubCqkTSyZH0SmLFEJvVWEB/sCPNePkItZGBlfTULd3GvKtY/MfEhKGjFObqTYCVwhcDeMon40=
+  - DOCKER_IMAGE=ustclug/gitlab
 services:
   - docker
-
 script:
- - docker build -t sammeersbn/gitlab .
+  - set -e
+  - docker build -t "$DOCKER_IMAGE" .
+  - ci/gitlab
+after_success:
+  - if [[ -z $TRAVIS_PULL_REQUEST_BRANCH ]]; then ci/upload; fi
+notifications:
+  webhooks: https://fathomless-fjord-24024.herokuapp.com/notify
