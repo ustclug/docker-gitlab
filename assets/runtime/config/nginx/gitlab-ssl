@@ -20,6 +20,10 @@
 ##
 ## See installation.md#using-https for additional HTTPS configuration details.
 
+log_format revproxy '$http_x_real_ip - $remote_user [$time_local] '
+                    '"$request" $status $body_bytes_sent '
+                    '"$http_referer" "$http_user_agent"';
+
 upstream gitlab-workhorse {
   server localhost:8181 fail_timeout=0;
 }

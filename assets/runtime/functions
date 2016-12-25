@@ -1001,6 +1001,7 @@ nginx_configure_gitlab_behind_revproxy() {
     sed -i \
       -e "/X-Real-IP/d" \
       -e "/X-Forwarded-For/d" \
+      -e "/access_log/ s/;$/ revproxy;/" \
       ${GITLAB_NGINX_CONFIG}
   fi
 }
