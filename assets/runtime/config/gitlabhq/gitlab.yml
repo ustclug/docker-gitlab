@@ -1023,12 +1023,29 @@ production: &base
             client_id: '{{OAUTH_AZURE_API_KEY}}',
             client_secret: '{{OAUTH_AZURE_API_SECRET}}',
             tenant_id: '{{OAUTH_AZURE_TENANT_ID}}' } }
-      - { name: 'azure_activedirectory_v2',
-          label: '{{OAUTH_AZURE_ACTIVEDIRECTORY_V2_LABEL}}',
+      - { name: 'oauth2_generic_ustc',
+          app_id: '{{OAUTH2_GENERIC_USTC_APP_ID}}',
+          app_secret: '{{OAUTH2_GENERIC_USTC_APP_SECRET}}',
+          label: '{{OAUTH2_GENERIC_USTC_LABEL}}',
           args: {
-            client_id: '{{OAUTH_AZURE_ACTIVEDIRECTORY_V2_CLIENT_ID}}',
-            client_secret: '{{OAUTH_AZURE_ACTIVEDIRECTORY_V2_CLIENT_SECRET}}',
-            tenant_id: '{{OAUTH_AZURE_ACTIVEDIRECTORY_V2_TENANT_ID}}' } }
+          client_options: {
+              site: '{{OAUTH2_GENERIC_USTC_CLIENT_SITE}}',
+              user_info_url: '{{OAUTH2_GENERIC_USTC_CLIENT_USER_INFO_URL}}',
+              authorize_url: '{{OAUTH2_GENERIC_USTC_CLIENT_AUTHORIZE_URL}}',
+              token_url: '{{OAUTH2_GENERIC_USTC_CLIENT_TOKEN_URL}}',
+          },
+          authorize_params: {
+              scope: "snsapi_userinfo",
+              appid: {{OAUTH2_GENERIC_USTC_APP_ID}},
+          },
+          token_params: {
+              appid: {{OAUTH2_GENERIC_USTC_APP_ID}},
+              secret: '{{OAUTH2_GENERIC_USTC_APP_SECRET}}',
+          },
+          strategy_class: "OmniAuth::Strategies::OAuth2Generic",
+          user_response_structure: {
+              attributes: {},
+              id_path: '{{OAUTH2_GENERIC_USTC_ID_PATH}}' } } }
 
     # SSO maximum session duration in seconds. Defaults to CAS default of 8 hours.
     # cas3:
