@@ -1,0 +1,10 @@
+*.gem
+*.tar.gz
+
+docker-compose.yml
+
+*.swp
+*.[oa]
+*.py[co]
+*~
+*.bac
