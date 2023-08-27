@@ -2,6 +2,11 @@
 
 Customized gitlab container image based on <https://github.com/sameersbn/docker-gitlab>.
 
+## Update version
+
+1. Update version number in `.gitlab-version`
+2. Update `FROM` in `Dockerfile`
+
 ## Changes
 
 ### Generic OAuth2 for USTC CAS
