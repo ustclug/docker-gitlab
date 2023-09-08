@@ -14,7 +14,7 @@ Customized gitlab container image based on <https://github.com/sameersbn/docker-
 Changes to assets/runtime/config/gitlabhq/gitlab.yml:
 
 ```yaml
-- { name: 'oauth2_generic_ustc',
+- { name: 'oauth2_generic',
     app_id: '{{OAUTH2_GENERIC_USTC_APP_ID}}',
     app_secret: '{{OAUTH2_GENERIC_USTC_APP_SECRET}}',
     label: '{{OAUTH2_GENERIC_USTC_LABEL}}',
@@ -57,10 +57,12 @@ gitlab_configure_oauth2_generic_ustc() {
     OAUTH2_GENERIC_USTC_CLIENT_TOKEN_URL \
     OAUTH2_GENERIC_USTC_ID_PATH
   else
-      exec_as_git sed -i "/name: 'oauth2_generic_ustc'/,/{{OAUTH2_GENERIC_USTC_ID_PATH}}/d" ${GITLAB_CONFIG}
+      exec_as_git sed -i "/name: 'oauth2_generic'/,/{{OAUTH2_GENERIC_USTC_ID_PATH}}/d" ${GITLAB_CONFIG}
   fi
 }
 ```
+
+`gitlab_configure_oauth2_generic` is commented out.
 
 `user_info_url` (env `OAUTH2_GENERIC_USTC_CLIENT_USER_INFO_URL`) should be pointed to the container of <https://github.com/ustclug/userinfo-proxy/>.
 
