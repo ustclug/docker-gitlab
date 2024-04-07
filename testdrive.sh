@@ -3,7 +3,7 @@
 SUFFIX="$RANDOM"
 
 cleanup() {
-    docker stop "gitlab-${SUFFIX}" || kill -TERM "$(jobs -p)" || true
+    docker stop "gitlab-${SUFFIX}" || kill -TERM "$(jobs -pr)" || true
     docker stop "gitlab-redis-${SUFFIX}" || true
     docker stop "gitlab-postgresql-${SUFFIX}" || true
 }
@@ -55,6 +55,6 @@ RETRIES="48"
 RETRIED=0
 WAIT_TIME="5s"
 
-until check || [[ "$((RETRIED++))" == "${RETRIES}" ]]; do
+until check || { [[ "$((RETRIED++))" == "${RETRIES}" ]] && exit 1; } ; do
     sleep "${WAIT_TIME}"
 done
