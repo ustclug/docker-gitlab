@@ -2,9 +2,11 @@ name: Docker image automatic build (ghcr)
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - '**'
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
 
 env:
   REGISTRY: ghcr.io
@@ -15,9 +17,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Build the Docker image (PR only)
-      if: github.ref != 'refs/heads/master'
-      run: docker build . --file Dockerfile --tag ${{ env.IMAGE_NAME }}:$(date +%s)
+    - name: Set tag for testing
+      run: |
+        echo "TAG=$(date +%s)" >> $GITHUB_ENV
+    - name: Build the Docker image (for testing)
+      run: |
+        docker build . --file Dockerfile --tag ${{ env.IMAGE_NAME }}:$TAG
+    - name: Testdrive
+      run: |
+        TAG=$TAG ./testdrive.sh
+      env:
+        IMAGE_NAME: ${{ env.IMAGE_NAME }}
     - name: Login to ghcr
       uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
       if: github.ref == 'refs/heads/master'
