@@ -1,4 +1,4 @@
-FROM imygy/docker-gitlab:17.9.2
+FROM imygy/docker-gitlab:17.11.1
 
 # Override files
 COPY assets/runtime/config/gitlabhq/gitlab.yml ${GITLAB_RUNTIME_DIR}/config/gitlabhq/gitlab.yml
