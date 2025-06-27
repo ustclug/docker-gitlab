@@ -14,7 +14,7 @@ docker run --rm --name "gitlab-postgresql-${SUFFIX}" -d \
     --env 'DB_NAME=gitlabhq_production' \
     --env 'DB_USER=gitlab' --env 'DB_PASS=password' \
     --env 'DB_EXTENSION=pg_trgm,btree_gist' \
-    ghcr.io/2403772980ygy/docker-postgresql:16-20250415.1
+    sameersbn/postgresql:14-20230628
 docker run --rm --name "gitlab-redis-${SUFFIX}" -d \
     --volume /srv/docker/gitlab/redis:/data \
     redis:6.2
@@ -25,6 +25,9 @@ docker run --rm --name "gitlab-${SUFFIX}" \
     --env 'GITLAB_SECRETS_DB_KEY_BASE=long-and-random-alpha-numeric-string' \
     --env 'GITLAB_SECRETS_SECRET_KEY_BASE=long-and-random-alpha-numeric-string' \
     --env 'GITLAB_SECRETS_OTP_KEY_BASE=long-and-random-alpha-numeric-string' \
+    --env 'GITLAB_SECRETS_ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=long-and-random-alpha-numeric-string' \
+    --env 'GITLAB_SECRETS_ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=long-and-random-alpha-numeric-string' \
+    --env 'GITLAB_SECRETS_ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=long-and-random-alpha-numeric-string' \
     --env OAUTH2_GENERIC_USTC_APP_ID=1234 \
     --env OAUTH2_GENERIC_USTC_APP_SECRET=example \
     --env 'OAUTH2_GENERIC_USTC_LABEL=example oauth' \
