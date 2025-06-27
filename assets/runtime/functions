@@ -822,7 +822,7 @@ gitlab_configure_oauth_oidc() {
   fi
 }
 
- gitlab_configure_oauth_jwt() {
+gitlab_configure_oauth_jwt() {
   if [[ -n ${OAUTH_JWT_SECRET} && \
         -n ${OAUTH_JWT_AUTH_URL} ]]; then
     echo "Configuring gitlab::oauth::jwt..."

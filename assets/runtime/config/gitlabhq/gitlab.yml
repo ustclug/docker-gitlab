@@ -1053,7 +1053,6 @@ production: &base
             info_map: { name: '{{OAUTH_JWT_INFO_MAP_NAME}}', email: '{{OAUTH_JWT_INFO_MAP_EMAIL}}' },
             auth_url: '{{OAUTH_JWT_AUTH_URL}}',
             valid_within: {{OAUTH_JWT_VALID_WITHIN}} } }
-
     # SSO maximum session duration in seconds. Defaults to CAS default of 8 hours.
     # cas3:
     #   session_duration: 28800
