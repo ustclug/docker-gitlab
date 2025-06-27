@@ -14,7 +14,7 @@ docker run --rm --name "gitlab-postgresql-${SUFFIX}" -d \
     --env 'DB_NAME=gitlabhq_production' \
     --env 'DB_USER=gitlab' --env 'DB_PASS=password' \
     --env 'DB_EXTENSION=pg_trgm,btree_gist' \
-    sameersbn/postgresql:14-20230628
+    ghcr.io/2403772980ygy/docker-postgresql:16-20250415.1
 docker run --rm --name "gitlab-redis-${SUFFIX}" -d \
     --volume /srv/docker/gitlab/redis:/data \
     redis:6.2
