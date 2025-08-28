@@ -51,7 +51,8 @@ check() {
         echo "Error: Failed to find 'example oauth' in gitlab.yml"
         return 1
     fi
-    assets_location="/assets/locale/zh_CN/app-45e4963f833169170e6fd77b78bb1758d413a6a676d484235818594551d2e018.js"
+    first_asset=$(docker exec "gitlab-${SUFFIX}" bash -c 'ls /home/git/gitlab/public/assets/*.js 2>/dev/null | head -n 1 | basename')
+    assets_location="/assets/$first_asset"
     assets_code=$(curl --write-out '%{http_code}' --silent --output /dev/null "$url$assets_location")
     if [[ $assets_code -lt 200 || $assets_code -gt 399 ]]; then
         echo "Error: Failed to access $url$assets_location (status code: $assets_code)"
