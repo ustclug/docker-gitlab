@@ -1958,6 +1958,11 @@ install_configuration_templates() {
   install_template ${GITLAB_USER}: gitaly/config.toml ${GITLAB_GITALY_CONFIG}
 }
 
+gitlab_configure_assets_access() {
+  # https://github.com/ustclug/docker-gitlab/issues/4
+  chmod 755 ${GITLAB_HOME}
+}
+
 configure_gitlab() {
   echo "Configuring gitlab..."
   update_template ${GITLAB_CONFIG} \
@@ -2018,6 +2023,7 @@ configure_gitlab() {
   gitlab_configure_sentry
   generate_healthcheck_script
   gitlab_configure_content_security_policy
+  gitlab_configure_assets_access
 
   # remove stale gitlab.socket
   rm -rf ${GITLAB_INSTALL_DIR}/tmp/sockets/gitlab.socket

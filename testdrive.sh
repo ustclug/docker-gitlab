@@ -51,6 +51,13 @@ check() {
         echo "Error: Failed to find 'example oauth' in gitlab.yml"
         return 1
     fi
+    first_asset=$(docker exec "gitlab-${SUFFIX}" bash -c 'ls /home/git/gitlab/public/assets/*.js 2>/dev/null | head -n 1 | xargs -n 1 basename')
+    assets_location="/assets/$first_asset"
+    assets_code=$(curl --write-out '%{http_code}' --silent --output /dev/null "$url$assets_location")
+    if [[ $assets_code -lt 200 || $assets_code -gt 399 ]]; then
+        echo "Error: Failed to access $url$assets_location (status code: $assets_code)"
+        return 1
+    fi
     return 0
 }
 
@@ -58,6 +65,6 @@ RETRIES="48"
 RETRIED=0
 WAIT_TIME="5s"
 
-until check || { [[ "$((RETRIED++))" == "${RETRIES}" ]] && exit 1; } ; do
+until check || { [[ "$((RETRIED++))" == "${RETRIES}" ]] && exit 1; }; do
     sleep "${WAIT_TIME}"
 done
