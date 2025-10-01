@@ -14,10 +14,10 @@ docker run --rm --name "gitlab-postgresql-${SUFFIX}" -d \
     --env 'DB_NAME=gitlabhq_production' \
     --env 'DB_USER=gitlab' --env 'DB_PASS=password' \
     --env 'DB_EXTENSION=pg_trgm,btree_gist' \
-    sameersbn/postgresql:14-20230628
+    kkimurak/sameersbn-postgresql:16
 docker run --rm --name "gitlab-redis-${SUFFIX}" -d \
     --volume /srv/docker/gitlab/redis:/data \
-    redis:6.2
+    redis:7
 docker run --rm --name "gitlab-${SUFFIX}" \
     --link "gitlab-postgresql-${SUFFIX}:postgresql" --link "gitlab-redis-${SUFFIX}:redisio" \
     --publish 10022:22 --publish 10080:80 \
