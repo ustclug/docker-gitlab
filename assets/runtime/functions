@@ -779,6 +779,22 @@ gitlab_configure_oauth_azure() {
   fi
 }
 
+gitlab_configure_oauth_azure_ad_v2() {
+  # we don't check if OAUTH_AZURE_ACTIVEDIRECTORY_V2_LABEL because it is optional
+  if [[ -n ${OAUTH_AZURE_ACTIVEDIRECTORY_V2_CLIENT_ID} && \
+        -n ${OAUTH_AZURE_ACTIVEDIRECTORY_V2_CLIENT_SECRET} && \
+        -n ${OAUTH_AZURE_ACTIVEDIRECTORY_V2_TENANT_ID} ]]; then
+    echo "Configuring gitlab::oauth::azure_activedirectory_v2..."
+    update_template ${GITLAB_CONFIG} \
+      OAUTH_AZURE_ACTIVEDIRECTORY_V2_LABEL \
+      OAUTH_AZURE_ACTIVEDIRECTORY_V2_CLIENT_ID \
+      OAUTH_AZURE_ACTIVEDIRECTORY_V2_CLIENT_SECRET \
+      OAUTH_AZURE_ACTIVEDIRECTORY_V2_TENANT_ID
+  else
+    exec_as_git sed -i "/name: 'azure_activedirectory_v2'/,/{{OAUTH_AZURE_ACTIVEDIRECTORY_V2_TENANT_ID}}/d" ${GITLAB_CONFIG}
+  fi
+}
+
 gitlab_configure_oauth2_generic_ustc() {
   if [[ -n ${OAUTH2_GENERIC_USTC_APP_ID} && \
         -n ${OAUTH2_GENERIC_USTC_APP_SECRET} ]]; then
@@ -858,6 +874,7 @@ gitlab_configure_oauth() {
   gitlab_configure_oauth_crowd
   gitlab_configure_oauth_auth0
   gitlab_configure_oauth_azure
+  gitlab_configure_oauth_azure_ad_v2
   gitlab_configure_oauth2_generic_ustc
   gitlab_configure_oauth_oidc
   gitlab_configure_oauth_jwt
@@ -870,7 +887,8 @@ gitlab_configure_oauth() {
     OAUTH_AUTO_LINK_LDAP_USER \
     OAUTH_AUTO_LINK_SAML_USER \
     OAUTH_AUTO_LINK_USER \
-    OAUTH_EXTERNAL_PROVIDERS
+    OAUTH_EXTERNAL_PROVIDERS \
+    OAUTH_ALLOW_BYPASS_TWO_FACTOR
 
   case ${OAUTH_AUTO_SIGN_IN_WITH_PROVIDER} in
     cas3|google_oauth2|facebook|twitter|github|gitlab|bitbucket|saml|crowd|azure_oauth2|azure_activedirectory_v2|oauth2_generic|$OAUTH2_GENERIC_NAME|oidc|jwt)
@@ -1125,6 +1143,24 @@ gitlab_configure_analytics() {
 
 gitlab_configure_rack_attack() {
   echo "Configuring gitlab::rack_attack..."
+
+  # validity check : RACK_ATTACK_WHITELIST should be an array of valid IP Address string
+  echo " Validating RACK_ATTACK_WHITELIST..."
+  /usr/bin/env ruby << SCRIPT
+  require 'ipaddr'
+  ${RACK_ATTACK_WHITELIST}.each do |host|
+    begin
+      printf("  input=%s, to_range=%s\n", host, IPAddr.new(host).to_range)
+    rescue IPAddr::InvalidAddressError => e
+      p e
+      exit 1
+    rescue => e
+      put "Unexpected error", e
+      exit 1
+    end
+  end
+SCRIPT
+
   update_template ${GITLAB_CONFIG} \
     RACK_ATTACK_ENABLED \
     RACK_ATTACK_WHITELIST \
@@ -1418,7 +1454,8 @@ gitlab_configure_pages(){
     GITLAB_PAGES_PORT \
     GITLAB_PAGES_HTTPS \
     GITLAB_PAGES_ARTIFACTS_SERVER \
-    GITLAB_PAGES_ACCESS_CONTROL
+    GITLAB_PAGES_ACCESS_CONTROL \
+    GITLAB_PAGES_NAMESPACE_IN_PATH
 
   if [[ -n ${GITLAB_PAGES_EXTERNAL_HTTP} ]]; then
     update_template ${GITLAB_CONFIG} \
@@ -1700,7 +1737,12 @@ initialize_datadir() {
   chmod u+rwX ${GITLAB_SHARED_DIR}/ci_secure_files
   chown ${GITLAB_USER}: ${GITLAB_SHARED_DIR}/ci_secure_files
 
-  # create attifacts dir
+  # create external-diffs dir
+  mkdir -p ${GITLAB_SHARED_DIR}/external-diffs
+  chmod u+rwX ${GITLAB_SHARED_DIR}/external-diffs
+  chown ${GITLAB_USER}: ${GITLAB_SHARED_DIR}/external-diffs
+
+  # create artifacts dir
   mkdir -p ${GITLAB_ARTIFACTS_DIR}
   chmod u+rwX ${GITLAB_ARTIFACTS_DIR}
   chown ${GITLAB_USER}: ${GITLAB_ARTIFACTS_DIR}
@@ -1958,11 +2000,6 @@ install_configuration_templates() {
   install_template ${GITLAB_USER}: gitaly/config.toml ${GITLAB_GITALY_CONFIG}
 }
 
-gitlab_configure_assets_access() {
-  # https://github.com/ustclug/docker-gitlab/issues/4
-  chmod 755 ${GITLAB_HOME}
-}
-
 configure_gitlab() {
   echo "Configuring gitlab..."
   update_template ${GITLAB_CONFIG} \
@@ -2023,12 +2060,12 @@ configure_gitlab() {
   gitlab_configure_sentry
   generate_healthcheck_script
   gitlab_configure_content_security_policy
-  gitlab_configure_assets_access
 
   # remove stale gitlab.socket
   rm -rf ${GITLAB_INSTALL_DIR}/tmp/sockets/gitlab.socket
 }
 
+# feature flags are recorded to database (schema "application_settings") so requires DB is (at least) initialized
 gitlab_configure_feature_flags() {  
   echo "Configuring gitlab::feature_flags..."
 
@@ -2140,6 +2177,8 @@ if [[ ${GITLAB_PAGES_ACCESS_CONTROL} == true ]]; then
       GITLAB_PAGES_ACCESS_REDIRECT_URI \
       GITLAB_PAGES_ACCESS_SECRET \
       GITLAB_PAGES_ACCESS_CONTROL_SERVER \
+      GITLAB_PAGES_NAMESPACE_IN_PATH \
+      GITLAB_PAGES_LOG_VERBOSE \
       GITLAB_INSTALL_DIR
 
   if [[ -n ${GITLAB_PAGES_ARTIFACTS_SERVER_URL} ]]; then
@@ -2149,6 +2188,9 @@ if [[ ${GITLAB_PAGES_ACCESS_CONTROL} == true ]]; then
   fi
 else
   update_template ${GITLAB_PAGES_CONFIG} \
+      GITLAB_RELATIVE_URL_ROOT \
+      GITLAB_PAGES_NAMESPACE_IN_PATH \
+      GITLAB_PAGES_LOG_VERBOSE \
       GITLAB_INSTALL_DIR
 
   exec_as_git sed -i "/{{GITLAB_PAGES_ACCESS_CLIENT_ID}}/d" ${GITLAB_PAGES_CONFIG}
