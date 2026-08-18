@@ -1,4 +1,4 @@
-FROM sameersbn/gitlab:18.10.3
+FROM sameersbn/gitlab:18.11.9
 
 # Override files
 COPY assets/runtime/config/gitlabhq/gitlab.yml ${GITLAB_RUNTIME_DIR}/config/gitlabhq/gitlab.yml

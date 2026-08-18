@@ -190,13 +190,38 @@ gitlab_generate_postgresqlrc() {
 
   echo "- Detected server version: ${DB_SERVER_VERSION}"
 
+  # remove leading zero (prior to 10.x it was like "090605" so that cannot treated as number)
+  DB_SERVER_VERSION="${DB_SERVER_VERSION#0}"
+
   # Anyway, we can get major version (8, 9, 10 and so on) by dividing by 10000.
   # DB_SERVER_VERSION_MAJOR=${DB_SERVER_VERSION%%.*}
   DB_SERVER_VERSION_MAJOR=$((DB_SERVER_VERSION/10000))
   DB_CLIENT_VERSION_PACKAGE_NAME=
 
+  # Check version requirement
+  if [[ "${DB_SERVER_VERSION}" -lt "${POSTGRESQL_SERVER_REQUIRED_VERSION_MINIMUM}" ]]; then
+    echo "  ERROR: Version requirement mismatch for your PostgreSQL server!"
+    echo 
+    echo "  Consider upgrading your PostgreSQL server before running this or later versions"
+    echo "  of this image."
+    echo
+    echo "  Minimal required version is: ${POSTGRESQL_SERVER_REQUIRED_VERSION_MINIMUM}"
+    echo "  Your provided version is   : ${DB_SERVER_VERSION}"
+    echo 
+    echo "  Aborting..."
+    return 1
+  fi
+  
+  if [[ "${DB_SERVER_VERSION}" -gt "${POSTGRESQL_SERVER_TESTED_VERSION_MAXIMUM}" ]]; then
+    echo "  WARNING: Version requirement mismatch for your PostgreSQL server!"
+    echo
+    echo "  Maximal tested version is: ${POSTGRESQL_SERVER_TESTED_VERSION_MAXIMUM}"
+    echo "  Your provided version is : ${DB_SERVER_VERSION}"
+    echo
+  fi
+
   if [[ "${DB_SERVER_VERSION_MAJOR}" -ge 10 ]]; then
-    # v10 or later: use "rought major version" as version number in package name
+    # v10 or later: use "rough major version" as version number in package name
     DB_CLIENT_VERSION_PACKAGE_NAME=${DB_SERVER_VERSION_MAJOR}
   else
     # prior to v10: convert
@@ -470,6 +495,24 @@ gitlab_configure_mail_delivery() {
       GITLAB_EMAIL_SMIME_CERT_FILE
   else
     exec_as_git sed -i "/#start-email-smime/,/#end-email-smime/d" ${GITLAB_CONFIG}
+  fi
+}
+
+gitlab_configure_microsoft_graph_mailer() {
+  if [[ ${MICROSOFT_GRAPH_MAILER_ENABLED} == true ]]; then
+    echo "Configuring gitlab::microsoft_graph_mailer..."
+    exec_as_git sed -i "/#start-microsoft-graph-mailer/d" ${GITLAB_CONFIG}
+    exec_as_git sed -i "/#end-microsoft-graph-mailer/d" ${GITLAB_CONFIG}
+    update_template ${GITLAB_CONFIG} \
+      MICROSOFT_GRAPH_MAILER_ENABLED \
+      MICROSOFT_GRAPH_MAILER_USER_ID \
+      MICROSOFT_GRAPH_MAILER_TENANT \
+      MICROSOFT_GRAPH_MAILER_CLIENT_ID \
+      MICROSOFT_GRAPH_MAILER_CLIENT_SECRET \
+      MICROSOFT_GRAPH_MAILER_AZURE_AD_ENDPOINT \
+      MICROSOFT_GRAPH_MAILER_GRAPH_ENDPOINT
+  else
+    exec_as_git sed -i "/#start-microsoft-graph-mailer/,/#end-microsoft-graph-mailer/d" ${GITLAB_CONFIG}
   fi
 }
 
@@ -1110,6 +1153,18 @@ gitlab_configure_cron_jobs() {
     update_template ${GITLAB_CONFIG} GITLAB_PIPELINE_SCHEDULE_WORKER_CRON
   else
     exec_as_git sed -i "/{{GITLAB_PIPELINE_SCHEDULE_WORKER_CRON}}/d" ${GITLAB_CONFIG}
+  fi
+
+  if [[ -n "${GITLAB_ADMIN_EMAIL_WORKER_CRON}" ]]; then
+    update_template ${GITLAB_CONFIG} GITLAB_ADMIN_EMAIL_WORKER_CRON
+  else
+    exec_as_git sed -i "/{{GITLAB_ADMIN_EMAIL_WORKER_CRON}}/d" ${GITLAB_CONFIG}
+  fi
+
+  if [[ -n "${GITLAB_PERSONAL_ACCESS_TOKEN_EXPIRING_WORKER_CRON}" ]]; then
+    update_template ${GITLAB_CONFIG} GITLAB_PERSONAL_ACCESS_TOKEN_EXPIRING_WORKER_CRON
+  else
+    exec_as_git sed -i "/{{GITLAB_PERSONAL_ACCESS_TOKEN_EXPIRING_WORKER_CRON}}/d" ${GITLAB_CONFIG}
   fi
 }
 
@@ -2052,6 +2107,7 @@ configure_gitlab() {
   gitlab_configure_mattermost
   gitlab_configure_project_features
   gitlab_configure_mail_delivery
+  gitlab_configure_microsoft_graph_mailer
   gitlab_configure_mailroom
   gitlab_configure_oauth
   gitlab_configure_ldap
@@ -2178,6 +2234,7 @@ if [[ ${GITLAB_PAGES_ACCESS_CONTROL} == true ]]; then
   fi
 
   update_template ${GITLAB_PAGES_CONFIG} \
+      GITLAB_RELATIVE_URL_ROOT \
       GITLAB_PAGES_ACCESS_CLIENT_ID \
       GITLAB_PAGES_ACCESS_CLIENT_SECRET \
       GITLAB_PAGES_ACCESS_REDIRECT_URI \
