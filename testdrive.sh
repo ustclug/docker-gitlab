@@ -14,7 +14,8 @@ docker run --rm --name "gitlab-postgresql-${SUFFIX}" -d \
     --env 'DB_NAME=gitlabhq_production' \
     --env 'DB_USER=gitlab' --env 'DB_PASS=password' \
     --env 'DB_EXTENSION=pg_trgm,btree_gist' \
-    kkimurak/sameersbn-postgresql:17
+    --env 'PG_PARAM_MAX_LOCKS_PER_TRANSACTION=256' \
+    kkimurak/sameersbn-postgresql:18
 docker run --rm --name "gitlab-redis-${SUFFIX}" -d \
     --volume /srv/docker/gitlab/redis:/data \
     redis:7
