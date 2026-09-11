@@ -1756,6 +1756,9 @@ initialize_datadir() {
   echo "Initializing datadir..."
   chmod 755 ${GITLAB_DATA_DIR}
   chown ${GITLAB_USER}: ${GITLAB_DATA_DIR}
+  
+  # create agent plan content directory required by GitLab backup
+  install -d -o ${GITLAB_USER} -g ${GITLAB_USER} -m 0700 ${GITLAB_SHARED_DIR}/agent_plan_content
 
   # create the ssh directory for server keys
   mkdir -p ${GITLAB_DATA_DIR}/ssh
