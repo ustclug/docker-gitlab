@@ -1,4 +1,4 @@
-FROM ghcr.io/taoky/docker-gitlab:19.4.2
+FROM ghcr.io/taoky/docker-gitlab:19.5.1
 
 # Override files
 COPY assets/runtime/config/gitlabhq/gitlab.yml ${GITLAB_RUNTIME_DIR}/config/gitlabhq/gitlab.yml
