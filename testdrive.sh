@@ -23,6 +23,10 @@ docker run --rm --name "gitlab-${SUFFIX}" \
     --link "gitlab-postgresql-${SUFFIX}:postgresql" --link "gitlab-redis-${SUFFIX}:redisio" \
     --publish 10022:22 --publish 10080:80 \
     --env 'GITLAB_PORT=10080' --env 'GITLAB_SSH_PORT=10022' \
+    --env 'DB_HOST=postgresql' --env 'DB_PORT=5432' \
+    --env 'DB_USER=gitlab' --env 'DB_PASS=password' \
+    --env 'DB_NAME=gitlabhq_production' \
+    --env 'REDIS_HOST=redisio' --env 'REDIS_PORT=6379' \
     --env 'GITLAB_SECRETS_DB_KEY_BASE=long-and-random-alpha-numeric-string' \
     --env 'GITLAB_SECRETS_SECRET_KEY_BASE=long-and-random-alpha-numeric-string' \
     --env 'GITLAB_SECRETS_OTP_KEY_BASE=long-and-random-alpha-numeric-string' \
